@@ -176,9 +176,9 @@ def hourCalc():
     h2 = round(hours_total*(pTwo/100))
     h3 = round(hours_total*(pThree/100))
 
-    hours1 = np.empty(bus_days)
-    hours2 = np.empty(bus_days)
-    hours3 = np.empty(bus_days)
+    hours1 = []
+    hours2 = []
+    hours3 = []
 
     i = first_day
     for x in range(bus_days):
