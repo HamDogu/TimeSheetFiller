@@ -3,6 +3,7 @@
 #     print_hi('PyCharm')
 #
 # # See PyCharm help at https://www.jetbrains.com/help/pycharm/
+import math
 import random
 import tkinter as tk
 import pyautogui
@@ -23,8 +24,11 @@ from calendar import month_name, calendar, month_abbr
 #     hello()
 
 jubileeMode = True
-Debug = True
+Debug = False
 numFridays = 0
+intervalWait = 0
+
+pyautogui.FAILSAFE = True
 
 root = tk.Tk()
 root.resizable(False, False)
@@ -100,13 +104,18 @@ def month_changed(event):
         message=f'You selected {selected_month.get()}!'
     )
 
-def hello():
-    label1 = tk.Label(root, text='Hello World!', fg='green', font=('helvetica', 15, 'bold'))
+
+def startFill():
+    v = tk.StringVar()
+    v.set("Filling")
+    label1 = tk.Label(root, textvariable=v, fg='green', font=('helvetica', 15, 'bold'))
     canvas1.create_window(100, 20, window=label1)
     # root.iconify()
     # holidays()
+    workDays()
     switchWindow()
-
+    fillSheet()
+    v.set("Filled!")
 
 def switchWindow():
     # Holds down the alt key
@@ -116,7 +125,8 @@ def switchWindow():
     # Lets go of the alt key
     pyautogui.keyUp("alt")
 
-def workDays(event):
+
+def workDays():  # event):
     current_year = datetime.date.today().year
     from time import strptime
     current_mon = strptime(selected_month.get(),'%b').tm_mon
@@ -152,13 +162,12 @@ def workDays(event):
     #     message=f'You selected {bus_days}!'
     # )
 
+
 def percentCheck():
     global  pOne, pTwo, pThree
     pOne = int(codeOneEntry.get())
     pTwo = int(codeTwoEntry.get())
     pThree = int(codeThreeEntry.get())
-
-
 
     if (100 - pOne - pTwo - pThree) != 0 and not Debug:
         showinfo(
@@ -176,22 +185,29 @@ def hourCalc():
     h2 = round(hours_total*(pTwo/100))
     h3 = round(hours_total*(pThree/100))
 
+    global hours1, hours2, hours3
     hours1 = []
     hours2 = []
     hours3 = []
 
     i = first_day
+    j = 0
     for x in range(bus_days):
+        j = j + 1
+        if jubileeMode:
+            if j == 2:
+                i = i + 2
         # MaxH is for maximum hours in a day, weekday is 7.5, Friday is 6.5 and Weekend is 0
         maxH = 7.5
         if i == 5:
             maxH = 6.5
         elif i == 6 or i == 7:
-            maxH = 0
-            continue
+            i = 1
+        i = i + 1
 
-        rand1 = random.randint(0, 7)
+        rand1 = 0
         if h1 > 0:
+            rand1 = random.randint(3, 5)
             if h1 < rand1:
                 hours1.append(h1)
                 rand1 = round(h1)
@@ -199,12 +215,14 @@ def hourCalc():
             else:
                 hours1.append(rand1)
                 h1 = h1 - rand1
+        else:
+            hours1.append(0)
 
-        rand2 = random.randint(0, (7-rand1))
         # hours2.append(rand2)
         # h2 = h2 - rand2
-
+        rand2 = 0
         if h2 > 0:
+            rand2 = random.randint(1, (math.floor(maxH) - rand1))
             if h2 < rand2:
                 hours2.append(h2)
                 rand2 = round(h2)
@@ -212,8 +230,11 @@ def hourCalc():
             else:
                 hours2.append(rand2)
                 h2 = h2 - rand2
+        else:
+            hours2.append(0)
 
         hours3.append(maxH - rand1 - rand2)
+        h3 = h3 - (maxH - rand1 - rand2)
 
     for x in hours1:
         print("Hours 1: " + str(hours1[x]))
@@ -221,27 +242,82 @@ def hourCalc():
     for x in hours2:
         print("Hours 2: " + str(hours2[x]))
 
-    for x in hours3:
+    for x in range(len(hours3)):
         print("Hours 3: " + str(hours3[x]))
 
+    print("")
+    print("H1: " + str(h1))
+    print("H2: " + str(h2))
+    print("H3: " + str(h3))
+
+
+def fillSheet():
+    # Hours
+    for i in range(bus_days):
+        pyautogui.typewrite(str(hours1[i]), interval=intervalWait)
+        pyautogui.press("tab")
+
+    for i in range(2):
+        pyautogui.press("tab")
+
+    # Hours 2
+    for i in range(bus_days):
+        pyautogui.typewrite(str(hours2[i]), interval=intervalWait)
+        pyautogui.press("tab")
+
+    for i in range(4):
+        pyautogui.press("tab")
+
+    # Hours 3
+    for i in range(bus_days):
+        pyautogui.typewrite(str(hours3[i]), interval=intervalWait)
+        pyautogui.press("tab")
+
+
+def deleteSheet():
+    workDays()
+    switchWindow()
+
+    for i in range(bus_days):
+        pyautogui.typewrite(['backspace', 'backspace', 'backspace', 'backspace', 'backspace'], interval=intervalWait)
+        pyautogui.press("tab")
+
+    for i in range(2):
+        pyautogui.press("tab")
+
+    for i in range(bus_days):
+        pyautogui.typewrite(['backspace', 'backspace', 'backspace', 'backspace', 'backspace'], interval=intervalWait)
+        pyautogui.press("tab")
+
+    for i in range(4):
+        pyautogui.press("tab")
+
+    for i in range(bus_days):
+        pyautogui.typewrite(['backspace', 'backspace', 'backspace', 'backspace', 'backspace'], interval=intervalWait)
+        pyautogui.press("tab")
 
 # def fillLine():
 #     # d
 
-month_cb.bind('<<ComboboxSelected>>', workDays)
+
+month_cb.bind('<<ComboboxSelected>>')
+# month_cb.bind('<<ComboboxSelected>>', workDays)
 
 # set the current month
 current_month = datetime.datetime.now().strftime('%b')
 month_cb.set(current_month)
 
-canvas1 = tk.Canvas(root, width=200, height=80)
+canvas1 = tk.Canvas(root, width=200, height=110)
 # canvas1.bind("<KeyPress>", keydown)
 canvas1.grid(row=8, column=0, columnspan=2)
 # canvas1.pack()
 canvas1.focus_set()
 
-button1 = tk.Button(text='Fill me up', command=hello, bg='brown', fg='white')
+button1 = tk.Button(text='Fill me up', command=startFill, bg='blue', fg='white')
 canvas1.create_window(100, 60, window=button1)
+
+button1 = tk.Button(text='Clear Sheet', command=deleteSheet, bg='red', fg='white')
+canvas1.create_window(100, 90, window=button1)
 
 
 root.mainloop()
