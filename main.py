@@ -8,13 +8,13 @@ import random
 import tkinter as tk
 import pyautogui
 import numpy as np
-import pandas as pd
+# import pandas as pd
 import datetime
 import os
-import holidays
-import keyboard  # using module keyboard
+# import holidays
+# import keyboard  # using module keyboard
 from tkinter import ttk
-from tkinter import Grid
+# from tkinter import Grid
 # from datetime import datetime
 from tkinter.messagebox import showinfo
 from calendar import month_name, calendar, month_abbr
@@ -32,10 +32,11 @@ pyautogui.FAILSAFE = True
 
 root = tk.Tk()
 root.resizable(False, False)
-root.title('Time Sheet Filler V0.1')
+root.title('Time Sheet Filler V0.2')
 
 # store email address and password
 num_hols = tk.IntVar()
+num_hols.set(2)
 codeOne = tk.IntVar()
 codeOne.set(33)
 codeTwo = tk.IntVar()
@@ -49,7 +50,7 @@ signin = ttk.Frame(root)
 
 # email
 username = os.environ.get('USERNAME')
-ttk.Label(text="Timesheet Filler v0.1 - " + username).grid(row=0, column=0, columnspan=2)
+ttk.Label(text="Timesheet Filler v0.2 - " + username).grid(row=0, column=0, columnspan=2)
 
 # email
 ttk.Label(text="Number of public holidays in month:").grid(row=1, column=0, columnspan=2)
@@ -106,6 +107,7 @@ def month_changed(event):
 
 
 def startFill():
+    checkDate()
     v = tk.StringVar()
     v.set("Filling")
     label1 = tk.Label(root, textvariable=v, fg='green', font=('helvetica', 15, 'bold'))
@@ -195,14 +197,14 @@ def hourCalc():
     for x in range(bus_days):
         j = j + 1
         if jubileeMode:
-            if j == 2:
-                i = i + 2
+            if j == 2: #
+                i = 0
         # MaxH is for maximum hours in a day, weekday is 7.5, Friday is 6.5 and Weekend is 0
         maxH = 7.5
-        if i == 5:
+        if i == 4:
             maxH = 6.5
-        elif i == 6 or i == 7:
-            i = 1
+        elif i == 5 or i == 6:
+            i = 0
         i = i + 1
 
         rand1 = 0
@@ -279,22 +281,31 @@ def deleteSheet():
     switchWindow()
 
     for i in range(bus_days):
-        pyautogui.typewrite(['backspace', 'backspace', 'backspace', 'backspace', 'backspace'], interval=intervalWait)
+        pyautogui.typewrite(['backspace'], interval=intervalWait)
         pyautogui.press("tab")
 
     for i in range(2):
         pyautogui.press("tab")
 
     for i in range(bus_days):
-        pyautogui.typewrite(['backspace', 'backspace', 'backspace', 'backspace', 'backspace'], interval=intervalWait)
+        pyautogui.typewrite(['backspace'], interval=intervalWait)
         pyautogui.press("tab")
 
     for i in range(4):
         pyautogui.press("tab")
 
     for i in range(bus_days):
-        pyautogui.typewrite(['backspace', 'backspace', 'backspace', 'backspace', 'backspace'], interval=intervalWait)
+        pyautogui.typewrite(['backspace'], interval=intervalWait)
         pyautogui.press("tab")
+
+
+def checkDate():
+    if datetime.date.today() > datetime.date(2022, 7, 1):
+        showinfo(
+            title='Version Out of Date :(',
+            message=f'Current version of Time Sheet Filler is no longer supported, please contact your local Hamid for an upgrade. Thank you for using our service :)'
+        )
+        exit()
 
 # def fillLine():
 #     # d
