@@ -1,27 +1,14 @@
-# # Press the green button in the gutter to run the script.
-# if __name__ == '__main__':
-#     print_hi('PyCharm')
-#
-# # See PyCharm help at https://www.jetbrains.com/help/pycharm/
 import math
 import random
 import tkinter as tk
 import pyautogui
 import numpy as np
-# import pandas as pd
 import datetime
 import os
-# import holidays
-# import keyboard  # using module keyboard
 from tkinter import ttk, W
-# from tkinter import Grid
-# from datetime import datetime
 from tkinter.messagebox import showinfo
 from calendar import month_name, calendar, month_abbr
 
-# def keydown(e):
-#     print('down', e.char)
-#     hello()
 
 jubileeMode = True
 Debug = False
@@ -32,20 +19,20 @@ pyautogui.FAILSAFE = True
 
 root = tk.Tk()
 root.resizable(False, False)
-root.title('Time Sheet Filler V0.2')
+root.title('Time Sheet Filler V0.3')
+# root.iconbitmap("eggplant.ico")
 
 # store email address and password
 num_hols = tk.IntVar()
 num_hols.set(2)
 codeOne = tk.IntVar()
-codeOne.set(33)
+codeOne.set(35)
 codeTwo = tk.IntVar()
-codeTwo.set(33)
+codeTwo.set(35)
 codeThree = tk.IntVar()
-codeThree.set(34)
+codeThree.set(30)
 
 checkFirefox = tk.IntVar()
-
 
 # Sign in frame
 signin = ttk.Frame(root)
@@ -212,7 +199,7 @@ def hourCalc():
 
         rand1 = 0
         if h1 > 0:
-            rand1 = random.randint(3, 5)
+            rand1 = random.randint(1, 5)
             if h1 < rand1:
                 hours1.append(h1)
                 rand1 = round(h1)
@@ -346,5 +333,3 @@ canvas1.create_window(100, 90, window=button1)
 
 
 root.mainloop()
-
-
