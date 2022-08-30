@@ -13,7 +13,7 @@ import datetime
 import os
 # import holidays
 # import keyboard  # using module keyboard
-from tkinter import ttk
+from tkinter import ttk, W
 # from tkinter import Grid
 # from datetime import datetime
 from tkinter.messagebox import showinfo
@@ -43,6 +43,9 @@ codeTwo = tk.IntVar()
 codeTwo.set(33)
 codeThree = tk.IntVar()
 codeThree.set(34)
+
+checkFirefox = tk.IntVar()
+
 
 # Sign in frame
 signin = ttk.Frame(root)
@@ -267,7 +270,10 @@ def fillSheet():
         pyautogui.typewrite(str(hours2[i]), interval=intervalWait)
         pyautogui.press("tab")
 
-    for i in range(4):
+    finalTabs = 3
+    if checkFirefox.get() == 1:
+        finalTabs = 4
+    for i in range(finalTabs):
         pyautogui.press("tab")
 
     # Hours 3
@@ -291,7 +297,12 @@ def deleteSheet():
         pyautogui.typewrite(['backspace'], interval=intervalWait)
         pyautogui.press("tab")
 
-    for i in range(4):
+    finalTabs = 3
+    if checkFirefox.get() == 1:
+        finalTabs = 4
+    print("Final tabs:" + str(finalTabs))
+
+    for i in range(finalTabs):
         pyautogui.press("tab")
 
     for i in range(bus_days):
@@ -318,9 +329,12 @@ month_cb.bind('<<ComboboxSelected>>')
 current_month = datetime.datetime.now().strftime('%b')
 month_cb.set(current_month)
 
+ttk.Label(text="Firefox:", width=11, justify= "left").grid(row=8, column=0)
+tk.Checkbutton(root, variable=checkFirefox, onvalue=1, offvalue=0).grid(row=8, column=1, sticky=W)
+
 canvas1 = tk.Canvas(root, width=200, height=110)
 # canvas1.bind("<KeyPress>", keydown)
-canvas1.grid(row=8, column=0, columnspan=2)
+canvas1.grid(row=9, column=0, columnspan=2)
 # canvas1.pack()
 canvas1.focus_set()
 
