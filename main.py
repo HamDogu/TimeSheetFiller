@@ -5,10 +5,10 @@ import pyautogui
 import numpy as np
 import datetime
 import os
+import outlookScraper as outlook
 from tkinter import ttk, W
 from tkinter.messagebox import showinfo
-from calendar import month_name, calendar, month_abbr
-
+from calendar import month_name, calendar, month_abbr, monthrange
 
 jubileeMode = True
 Debug = False
@@ -124,9 +124,13 @@ def workDays():  # event):
     current_mon = strptime(selected_month.get(),'%b').tm_mon
     mon = str(current_mon)
     next_mon = str(current_mon + 1)
+    prev_mon = str(current_mon - 1)
     if current_mon < 10:
         mon = '0' + mon
         next_mon = '0' + next_mon
+    elif current_mon == 1:
+        prev_mon = 12
+
 
     # Experimental Holiday function
     # for holiday in holidays.Germany(years=[2020, 2021]).items():
@@ -142,13 +146,23 @@ def workDays():  # event):
     numFridays = np.busday_count(this_mon, next_mon,weekmask='Fri')
 
     start_day = datetime.date(current_year, current_mon, 1)
+
+    final_day_prev = monthrange(current_year, prev_mon)[1]
+    final_day_current = monthrange(current_year, current_mon)[1]
+    global outlookStart
+    outlookStart = datetime.date(current_year, prev_mon, final_day_prev)
+    global outlookEnd
+    outlookEnd = datetime.date(current_year, current_mon, final_day_current)
+
+
     global first_day
     first_day = (start_day.weekday())#"%A"))
+    # calendar.monthrange(year, month)[0] # for first weekday of month
 
     bus_days = int(bus_days) - int(holidays_entry.get())
 
     percentCheck()
-    hourCalc()
+    hourCalcRand()
     # showinfo(
     #     title='Result',
     #     message=f'You selected {bus_days}!'
@@ -168,7 +182,7 @@ def percentCheck():
         )
 
 
-def hourCalc():
+def hourCalcRand():
     print("fridays: " + str(numFridays))
     hours_weekday = (bus_days - numFridays) * 7.5
     hours_fri = numFridays * 6.5
@@ -272,6 +286,8 @@ def fillSheet():
     #Adding department code at the last box
     pyautogui.typewrite(depCode, interval=intervalWait)
 
+def leaveDates():
+    dates = outlook.scrapeOutlook(outlookStart, outlookEnd)
 
 def deleteSheet():
     workDays()
