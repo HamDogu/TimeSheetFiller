@@ -244,6 +244,7 @@ def hourCalc():
 
 
 def fillSheet():
+    depCode = "Department code: 09eswm00"
     # Hours
     for i in range(bus_days):
         pyautogui.typewrite(str(hours1[i]), interval=intervalWait)
@@ -267,6 +268,9 @@ def fillSheet():
     for i in range(bus_days):
         pyautogui.typewrite(str(hours3[i]), interval=intervalWait)
         pyautogui.press("tab")
+
+    #Adding department code at the last box
+    pyautogui.typewrite(depCode, interval=intervalWait)
 
 
 def deleteSheet():
