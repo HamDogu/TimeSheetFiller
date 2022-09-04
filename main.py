@@ -9,8 +9,10 @@ import outlookScraper as outlook
 from tkinter import ttk, W
 from tkinter.messagebox import showinfo
 from calendar import month_name, calendar, month_abbr, monthrange
+from govuk_bank_holidays.bank_holidays import BankHolidays
+from time import strptime
 
-jubileeMode = True
+bank_holidays = BankHolidays(locale='en')
 Debug = False
 numFridays = 0
 intervalWait = 0
@@ -23,8 +25,8 @@ root.title('Time Sheet Filler V0.3')
 # root.iconbitmap("eggplant.ico")
 
 # store email address and password
-num_hols = tk.IntVar()
-num_hols.set(2)
+# num_hols = tk.IntVar()
+# num_hols.set(2)
 codeOne = tk.IntVar()
 codeOne.set(35)
 codeTwo = tk.IntVar()
@@ -42,12 +44,12 @@ signin = ttk.Frame(root)
 username = os.environ.get('USERNAME')
 ttk.Label(text="Timesheet Filler v0.2 - " + username).grid(row=0, column=0, columnspan=2)
 
-# email
-ttk.Label(text="Number of public holidays in month:").grid(row=1, column=0, columnspan=2)
-holidays_entry = ttk.Entry(textvariable=num_hols, justify="center")
-holidays_entry.grid(row=2, column=0, columnspan=2)
-# holidays_entry.pack(fill='x', expand=True)
-# holidays_entry.focus()
+# # Holidays
+# ttk.Label(text="Number of public holidays in month:").grid(row=1, column=0, columnspan=2)
+# holidays_entry = ttk.Entry(textvariable=num_hols, justify="center")
+# holidays_entry.grid(row=2, column=0, columnspan=2)
+# # holidays_entry.pack(fill='x', expand=True)
+# # holidays_entry.focus()
 
 # label
 ttk.Label(text="Please select a month:").grid(row=3, column=0, columnspan=2)
@@ -97,7 +99,7 @@ def month_changed(event):
 
 
 def startFill():
-    checkDate()
+    # checkDate()
     v = tk.StringVar()
     v.set("Filling")
     label1 = tk.Label(root, textvariable=v, fg='green', font=('helvetica', 15, 'bold'))
@@ -120,7 +122,6 @@ def switchWindow():
 
 def workDays():  # event):
     current_year = datetime.date.today().year
-    from time import strptime
     current_mon = strptime(selected_month.get(),'%b').tm_mon
     mon = str(current_mon)
     next_mon = str(current_mon + 1)
@@ -131,10 +132,13 @@ def workDays():  # event):
     elif current_mon == 1:
         prev_mon = 12
 
-
-    # Experimental Holiday function
-    # for holiday in holidays.Germany(years=[2020, 2021]).items():
-    #     print(holiday)
+    # Bank Holidays
+    global bankHols
+    bankHols = []
+    for bank_holiday in bank_holidays.get_holidays('england-and-wales', datetime.date.today().year):
+        if bank_holiday['date'].month == current_mon:
+            bankHols.append(bank_holiday['date'].day) # gets the day values of the bank holidays
+    print(bankHols)
 
     this_mon = str(current_year) + '-' + mon
     next_mon = str(current_year) + '-' + next_mon
@@ -147,19 +151,20 @@ def workDays():  # event):
 
     start_day = datetime.date(current_year, current_mon, 1)
 
-    final_day_prev = monthrange(current_year, prev_mon)[1]
-    final_day_current = monthrange(current_year, current_mon)[1]
+    final_day_prev = monthrange(current_year, int(prev_mon))[1]
+    final_day_current = monthrange(current_year, int(current_mon))[1]
     global outlookStart
-    outlookStart = datetime.date(current_year, prev_mon, final_day_prev)
+    outlookStart = datetime.date(current_year, int(prev_mon), final_day_prev)
     global outlookEnd
-    outlookEnd = datetime.date(current_year, current_mon, final_day_current)
-
+    outlookEnd = datetime.date(current_year, int(current_mon), final_day_current)
 
     global first_day
     first_day = (start_day.weekday())#"%A"))
-    # calendar.monthrange(year, month)[0] # for first weekday of month
 
-    bus_days = int(bus_days) - int(holidays_entry.get())
+    global date_first_weekday
+    date_first_weekday = monthrange(current_year, int(current_mon))[0] # for first weekday of month
+
+    bus_days = int(bus_days) - int(len(bankHols))
 
     percentCheck()
     hourCalcRand()
@@ -183,6 +188,9 @@ def percentCheck():
 
 
 def hourCalcRand():
+
+
+    # Fridays and weekdays
     print("fridays: " + str(numFridays))
     hours_weekday = (bus_days - numFridays) * 7.5
     hours_fri = numFridays * 6.5
@@ -197,20 +205,23 @@ def hourCalcRand():
     hours3 = []
 
     i = first_day
-    j = 0
+    j = date_first_weekday
     for x in range(bus_days):
-        j = j + 1
-        if jubileeMode:
-            if j == 2: #
-                i = 0
+
+        # Working our hours per day taking into account bank hols and working days per month
+        if j in bankHols:  # skips the bank holiday if the days match the j value
+            i = i+1
         # MaxH is for maximum hours in a day, weekday is 7.5, Friday is 6.5 and Weekend is 0
         maxH = 7.5
         if i == 4:
             maxH = 6.5
         elif i == 5 or i == 6:
             i = 0
+            j = j + 2
         i = i + 1
+        j = j + 1  # increasing days by 1 after hours calculation
 
+        #Random Hours Calculations
         rand1 = 0
         if h1 > 0:
             rand1 = random.randint(1, 5)
@@ -241,6 +252,7 @@ def hourCalcRand():
 
         hours3.append(maxH - rand1 - rand2)
         h3 = h3 - (maxH - rand1 - rand2)
+
 
     for x in hours1:
         print("Hours 1: " + str(hours1[x]))
