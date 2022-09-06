@@ -126,9 +126,10 @@ def workDays():  # event):
     mon = str(current_mon)
     next_mon = str(current_mon + 1)
     prev_mon = str(current_mon - 1)
+    if current_mon < 9:
+        next_mon = '0' + next_mon
     if current_mon < 10:
         mon = '0' + mon
-        next_mon = '0' + next_mon
     elif current_mon == 1:
         prev_mon = 12
 
@@ -141,8 +142,11 @@ def workDays():  # event):
     print(bankHols)
 
     this_mon = str(current_year) + '-' + mon
-    next_mon = str(current_year) + '-' + next_mon
-
+    if current_mon == 12:
+        next_mon = str(current_year + 1) + '-01'
+    else: 
+        next_mon = str(current_year) + '-' + next_mon
+    
     global bus_days
     bus_days = np.busday_count(this_mon, next_mon)
 
