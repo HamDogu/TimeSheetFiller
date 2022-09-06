@@ -35,6 +35,7 @@ codeThree = tk.IntVar()
 codeThree.set(30)
 
 checkFirefox = tk.IntVar()
+randHoursSelected = tk.IntVar()
 
 # Sign in frame
 signin = ttk.Frame(root)
@@ -100,16 +101,22 @@ def month_changed(event):
 
 def startFill():
     # checkDate()
+    #global v
     v = tk.StringVar()
     v.set("Filling")
-    label1 = tk.Label(root, textvariable=v, fg='green', font=('helvetica', 15, 'bold'))
+    label1 = tk.Label(root, textvariable=v, fg='orange', font=('helvetica', 15, 'bold'))
     canvas1.create_window(100, 20, window=label1)
     # root.iconify()
     # holidays()
     workDays()
     switchWindow()
-    fillSheet()
-    v.set("Filled!")
+    if fillSheet() == True:
+        v.set("Filled!")
+        label1.config(fg='green')
+    else:
+        v.set("Failsafe Called")
+        label1.config(fg='red')
+
 
 def switchWindow():
     # Holds down the alt key
@@ -144,7 +151,7 @@ def workDays():  # event):
     this_mon = str(current_year) + '-' + mon
     if current_mon == 12:
         next_mon = str(current_year + 1) + '-01'
-    else: 
+    else:
         next_mon = str(current_year) + '-' + next_mon
     
     global bus_days
@@ -193,7 +200,6 @@ def percentCheck():
 
 def hourCalcRand():
 
-
     # Fridays and weekdays
     print("fridays: " + str(numFridays))
     hours_weekday = (bus_days - numFridays) * 7.5
@@ -225,43 +231,63 @@ def hourCalcRand():
         i = i + 1
         j = j + 1  # increasing days by 1 after hours calculation
 
-        #Random Hours Calculations
-        rand1 = 0
-        if h1 > 0:
-            rand1 = random.randint(1, 5)
-            if h1 < rand1:
-                hours1.append(h1)
-                rand1 = round(h1)
-                h1 = 0
+        if randHoursSelected.get() == 1:
+            #Random Hours Calculations
+            rand1 = 0
+            if h1 > 0:
+                rand1 = random.randint(1, 5)
+                if h1 < rand1:
+                    hours1.append(h1)
+                    rand1 = round(h1)
+                    h1 = 0
+                else:
+                    hours1.append(rand1)
+                    h1 = h1 - rand1
             else:
-                hours1.append(rand1)
-                h1 = h1 - rand1
-        else:
-            hours1.append(0)
+                hours1.append(0)
 
-        # hours2.append(rand2)
-        # h2 = h2 - rand2
-        rand2 = 0
-        if h2 > 0:
-            rand2 = random.randint(1, (math.floor(maxH) - rand1))
-            if h2 < rand2:
-                hours2.append(h2)
-                rand2 = round(h2)
-                h2 = 0
+            # hours2.append(rand2)
+            # h2 = h2 - rand2
+            rand2 = 0
+            if h2 > 0:
+                rand2 = random.randint(1, (math.floor(maxH) - rand1))
+                if h2 < rand2:
+                    hours2.append(h2)
+                    rand2 = round(h2)
+                    h2 = 0
+                else:
+                    hours2.append(rand2)
+                    h2 = h2 - rand2
             else:
-                hours2.append(rand2)
-                h2 = h2 - rand2
+                hours2.append(0)
+
+            hours3.append(maxH - rand1 - rand2)
+            h3 = h3 - (maxH - rand1 - rand2)
+        #If not selecting random values
         else:
-            hours2.append(0)
+            hCalc1 = round((maxH * (pOne / 100)), 2)
+            hCalc2 = round((maxH * (pTwo / 100)), 2)
+            hCalc3 = round(maxH - hCalc1 - hCalc2, 2)
+            if h1 > 0:
+                hours1.append(hCalc1)
+                h1 = h1 - hCalc1
+            else:
+                hours1.append(0)
+            if h2 > 0:
+                hours2.append(hCalc2)
+                h2 = h2 - hCalc2
+            else:
+                hours2.append(0)
+            if h3 > 0:
+                hours3.append(hCalc3)
+                h3 = h3 - hCalc3
+            else:
+                hours3.append(0)
 
-        hours3.append(maxH - rand1 - rand2)
-        h3 = h3 - (maxH - rand1 - rand2)
-
-
-    for x in hours1:
+    for x in range(len(hours1)):
         print("Hours 1: " + str(hours1[x]))
 
-    for x in hours2:
+    for x in range(len(hours2)):
         print("Hours 2: " + str(hours2[x]))
 
     for x in range(len(hours3)):
@@ -276,31 +302,38 @@ def hourCalcRand():
 def fillSheet():
     depCode = "Department code: 09eswm00"
     # Hours
-    for i in range(bus_days):
-        pyautogui.typewrite(str(hours1[i]), interval=intervalWait)
-        pyautogui.press("tab")
+    try:
+        for i in range(bus_days):
+            pyautogui.typewrite(str(hours1[i]), interval=intervalWait)
+            pyautogui.press("tab")
 
-    for i in range(2):
-        pyautogui.press("tab")
+        for i in range(2):
+            pyautogui.press("tab")
 
-    # Hours 2
-    for i in range(bus_days):
-        pyautogui.typewrite(str(hours2[i]), interval=intervalWait)
-        pyautogui.press("tab")
+        # Hours 2
+        for i in range(bus_days):
+            pyautogui.typewrite(str(hours2[i]), interval=intervalWait)
+            pyautogui.press("tab")
 
-    finalTabs = 3
-    if checkFirefox.get() == 1:
-        finalTabs = 4
-    for i in range(finalTabs):
-        pyautogui.press("tab")
+        finalTabs = 3
+        if checkFirefox.get() == 1:
+            finalTabs = 4
+        for i in range(finalTabs):
+            pyautogui.press("tab")
 
-    # Hours 3
-    for i in range(bus_days):
-        pyautogui.typewrite(str(hours3[i]), interval=intervalWait)
-        pyautogui.press("tab")
+        # Hours 3
+        for i in range(bus_days):
+            pyautogui.typewrite(str(hours3[i]), interval=intervalWait)
+            pyautogui.press("tab")
 
-    #Adding department code at the last box
-    pyautogui.typewrite(depCode, interval=intervalWait)
+        # Adding department code at the last box
+        pyautogui.typewrite(depCode, interval=intervalWait)
+        return True
+
+    except pyautogui.FailSafeException:  # as e syntax added in ~python2.5
+        print("Fail Safe Activated")
+        #v.set("FailSafe Called")
+        return False
 
 def leaveDates():
     dates = outlook.scrapeOutlook(outlookStart, outlookEnd)
@@ -355,9 +388,12 @@ month_cb.set(current_month)
 ttk.Label(text="Firefox:", width=11, justify= "left").grid(row=8, column=0)
 tk.Checkbutton(root, variable=checkFirefox, onvalue=1, offvalue=0).grid(row=8, column=1, sticky=W)
 
+ttk.Label(text="Rand Hrs:", width=11, justify= "left").grid(row=9, column=0)
+tk.Checkbutton(root, variable=randHoursSelected, onvalue=1, offvalue=0).grid(row=9, column=1, sticky=W)
+
 canvas1 = tk.Canvas(root, width=200, height=110)
 # canvas1.bind("<KeyPress>", keydown)
-canvas1.grid(row=9, column=0, columnspan=2)
+canvas1.grid(row=10, column=0, columnspan=2)
 # canvas1.pack()
 canvas1.focus_set()
 
