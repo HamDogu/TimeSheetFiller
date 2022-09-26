@@ -19,9 +19,11 @@ intervalWait = 0
 
 pyautogui.FAILSAFE = True
 
+versionNum = 1.0
+
 root = tk.Tk()
 root.resizable(False, False)
-root.title('Time Sheet Filler V0.3')
+root.title(f'Time Sheet Filler V{versionNum}')
 # root.iconbitmap("eggplant.ico")
 
 # store email address and password
@@ -43,7 +45,7 @@ signin = ttk.Frame(root)
 
 # email
 username = os.environ.get('USERNAME')
-ttk.Label(text="Timesheet Filler v0.2 - " + username).grid(row=0, column=0, columnspan=2)
+ttk.Label(text=f'Timesheet Filler v{versionNum} - {username}').grid(row=0, column=0, columnspan=2)
 
 # # Holidays
 # ttk.Label(text="Number of public holidays in month:").grid(row=1, column=0, columnspan=2)
@@ -101,7 +103,6 @@ def month_changed(event):
 
 def startFill():
     # checkDate()
-    #global v
     v = tk.StringVar()
     v.set("Filling")
     label1 = tk.Label(root, textvariable=v, fg='orange', font=('helvetica', 15, 'bold'))
@@ -148,6 +149,7 @@ def workDays():  # event):
             bankHols.append(bank_holiday['date'].day) # gets the day values of the bank holidays
     print(bankHols)
 
+    # Setting month variables (badly coded lol oh well)
     this_mon = str(current_year) + '-' + mon
     if current_mon == 12:
         next_mon = str(current_year + 1) + '-01'
@@ -284,14 +286,14 @@ def hourCalcRand():
             else:
                 hours3.append(0)
 
-    for x in range(len(hours1)):
-        print("Hours 1: " + str(hours1[x]))
-
-    for x in range(len(hours2)):
-        print("Hours 2: " + str(hours2[x]))
-
-    for x in range(len(hours3)):
-        print("Hours 3: " + str(hours3[x]))
+    # for x in range(len(hours1)):
+    #     print("Hours 1: " + str(hours1[x]))
+    #
+    # for x in range(len(hours2)):
+    #     print("Hours 2: " + str(hours2[x]))
+    #
+    # for x in range(len(hours3)):
+    #     print("Hours 3: " + str(hours3[x]))
 
     print("")
     print("H1: " + str(h1))
