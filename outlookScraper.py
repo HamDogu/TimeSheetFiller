@@ -1,12 +1,12 @@
 import datetime as dt
 import win32com.client
 
-
 class Dates:
     def __init__(self):
         self.datesAnnual = []
         self.datesSick = []
         self.datesStudy = []
+        self.datesAll = []
 
 
 def get_calendar(begin,end):
@@ -18,7 +18,7 @@ def get_calendar(begin,end):
     calendar = calendar.Restrict(restriction)
     return calendar
 
-def get_appointments(dates, calendar,subject_kw = None,exclude_subject_kw = None, body_kw = None):
+def get_appointments(dates, calendar, begin, subject_kw = None,exclude_subject_kw = None, body_kw = None):
     if subject_kw == None:
         appointments = [app for app in calendar]
     else:
@@ -41,6 +41,7 @@ def get_appointments(dates, calendar,subject_kw = None,exclude_subject_kw = None
     dates.datesSick = []
     dates.datesStudy = []
 
+    # Accessing Calendar
     for x in range(len(cal_subject)):
         if cal_busy[x] == 3:
             startStr = str(cal_start[x])[0:10]
@@ -49,24 +50,27 @@ def get_appointments(dates, calendar,subject_kw = None,exclude_subject_kw = None
             endDate = dt.datetime.strptime(endStr, "%Y-%m-%d").date()
             days = (endDate - startDate).days
 
-            if endDate == begin.date(): continue
+            if endDate == begin: continue
             print(str(cal_subject[x]) + ' : ' + str(cal_busy[x]) + " - Days: " + str(days) + ' - Start: ' + startStr + " - End: " + endStr)
 
             subject = str(cal_subject[x]).lower()
             # Adding to total
-            if 'annual' in subject:
+            if 'annual' in subject or 'holiday' in subject:
                 for y in range(days):
                     dates.datesAnnual.append(startDate.day + y)
+                    dates.datesAll.append((startDate.day + y, 'Annual'))
                 leaveAnnual += int(days)
 
-            if 'sick' in subject:
+            if 'sick' in subject or 'ill' in subject:
                 for y in range(days):
                     dates.datesSick.append(startDate.day + y)
+                    dates.datesAll.append((startDate.day + y, 'Sick'))
                 leaveSick += int(days)
 
             if 'study' in subject:
                 for y in range(days):
                     dates.datesStudy.append(startDate.day + y)
+                    dates.datesAll.append((startDate.day + y, 'Study'))
                 leaveStudy += int(days)
 
     print("\r\nAnnual Leave: " + str(leaveAnnual) + " - Sick Leave: " + str(leaveSick) + " - Study Leave: " + str(leaveStudy))
@@ -76,16 +80,19 @@ def get_appointments(dates, calendar,subject_kw = None,exclude_subject_kw = None
     print(dates.datesSick)
     print("Study Dates: ")
     print(dates.datesStudy)
+    print("All: ")
+    print(dates.datesAll)
 
     return dates
 
-begin = dt.datetime(2022,7,31)
-end = dt.datetime(2022,8,28)
+# begin = dt.datetime(2022,7,31)
+# end = dt.datetime(2022,8,28)
+
 
 def scrapeOutlook(begin, end):
     dates = Dates()
     cal = get_calendar(begin, end)
-    dates = get_appointments(dates, cal)  # , subject_kw = 'weekly', exclude_subject_kw = 'Webcast'
+    dates = get_appointments(dates, cal, begin)  # , subject_kw = 'weekly', exclude_subject_kw = 'Webcast'
     return dates
 
 # print(result)

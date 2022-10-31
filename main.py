@@ -19,7 +19,7 @@ intervalWait = 0
 
 pyautogui.FAILSAFE = True
 
-versionNum = 1.0
+versionNum = 2.0
 
 root = tk.Tk()
 root.resizable(False, False)
@@ -43,16 +43,9 @@ randHoursSelected = tk.IntVar()
 signin = ttk.Frame(root)
 # signin.pack(padx=10, pady=10, fill='x', expand=True)
 
-# email
+# Username
 username = os.environ.get('USERNAME')
 ttk.Label(text=f'Timesheet Filler v{versionNum} - {username}').grid(row=0, column=0, columnspan=2)
-
-# # Holidays
-# ttk.Label(text="Number of public holidays in month:").grid(row=1, column=0, columnspan=2)
-# holidays_entry = ttk.Entry(textvariable=num_hols, justify="center")
-# holidays_entry.grid(row=2, column=0, columnspan=2)
-# # holidays_entry.pack(fill='x', expand=True)
-# # holidays_entry.focus()
 
 # label
 ttk.Label(text="Please select a month:").grid(row=3, column=0, columnspan=2)
@@ -103,20 +96,28 @@ def month_changed(event):
 
 def startFill():
     # checkDate()
+    global leaveTaken
     v = tk.StringVar()
     v.set("Filling")
     label1 = tk.Label(root, textvariable=v, fg='orange', font=('helvetica', 15, 'bold'))
     canvas1.create_window(100, 20, window=label1)
     # root.iconify()
-    # holidays()
+
+    # Running functions
     workDays()
+    leaveTaken = leaveDates()
+    percentCheck()
+    hourCalcRand()
     switchWindow()
+
+    # Filling and updating sheet
     if fillSheet() == True:
         v.set("Filled!")
         label1.config(fg='green')
     else:
         v.set("Failsafe Called")
         label1.config(fg='red')
+    switchWindow()
 
 
 def switchWindow():
@@ -129,8 +130,10 @@ def switchWindow():
 
 
 def workDays():  # event):
+    global this_mon
+    global next_mon
     current_year = datetime.date.today().year
-    current_mon = strptime(selected_month.get(),'%b').tm_mon
+    current_mon = strptime(selected_month.get(), '%b').tm_mon
     mon = str(current_mon)
     next_mon = str(current_mon + 1)
     prev_mon = str(current_mon - 1)
@@ -150,6 +153,7 @@ def workDays():  # event):
     print(bankHols)
 
     # Setting month variables (badly coded lol oh well)
+
     this_mon = str(current_year) + '-' + mon
     if current_mon == 12:
         next_mon = str(current_year + 1) + '-01'
@@ -163,7 +167,6 @@ def workDays():  # event):
     numFridays = np.busday_count(this_mon, next_mon,weekmask='Fri')
 
     start_day = datetime.date(current_year, current_mon, 1)
-
     final_day_prev = monthrange(current_year, int(prev_mon))[1]
     final_day_current = monthrange(current_year, int(current_mon))[1]
     global outlookStart
@@ -175,12 +178,14 @@ def workDays():  # event):
     first_day = (start_day.weekday())#"%A"))
 
     global date_first_weekday
-    date_first_weekday = monthrange(current_year, int(current_mon))[0] # for first weekday of month
+    date_first_weekday = np.busday_offset(start_day, 0, roll='forward', weekmask='Mon Tue Wed Thu Fri')
+    # monthrange(current_year, int(current_mon))[0] # for first weekday of month
+
+    print(f'First day: {str(first_day)}, Date_first_weekday: {str(date_first_weekday)}, Current month: {str(current_mon)}')
 
     bus_days = int(bus_days) - int(len(bankHols))
 
-    percentCheck()
-    hourCalcRand()
+
     # showinfo(
     #     title='Result',
     #     message=f'You selected {bus_days}!'
@@ -199,25 +204,57 @@ def percentCheck():
             message=f'Percentages do not equal 100, do you mean 3rd% to be {(100 - pOne - pTwo)}?'
         )
 
+def hoursLeaveFri():
+    first_elms = [x[0] for x in dates.datesAll]
+    numFri = 0
+    for i in first_elms:
+        if i < 10:
+            datey = this_mon + '-0' + str(i)
+        else:
+            datey = this_mon + '-' + str(i)
+        if np.is_busday(np.datetime64(datey), weekmask="Fri"):
+            numFri = numFri + 1
+    return numFri
+
+def dateToDateTime(i):
+    year = datetime.date.today().year
+    mon = strptime(selected_month.get(), '%b').tm_mon
+    datey = datetime.datetime(year, mon, i)
+    return datey
+
 
 def hourCalcRand():
-
     # Fridays and weekdays
     print("fridays: " + str(numFridays))
     hours_weekday = (bus_days - numFridays) * 7.5
     hours_fri = numFridays * 6.5
     hours_total = hours_fri + hours_weekday
+
+    # TODO: Change to datesAll to allow for separate logging of study leave
+    # Check which of these are annual leave
+    hours_leave = len(dates.datesAnnual)  # .datesAll)
+    print(len(dates.datesAnnual))  # .datesAll))
+    hours_leave_fri = hoursLeaveFri()
+    hours_leave = hours_leave - hours_leave_fri
+    # hours_total = hours_total - (hours_leave * 7.5 + hours_leave_fri * 6.5)
+
     h1 = round(hours_total*(pOne/100))
     h2 = round(hours_total*(pTwo/100))
     h3 = round(hours_total*(pThree/100))
 
-    global hours1, hours2, hours3
+    global hours1, hours2, hours3, actual_days
     hours1 = []
     hours2 = []
     hours3 = []
+    actual_days = []
 
     i = first_day
-    j = date_first_weekday
+    j = date_first_weekday.astype(datetime.datetime)
+    j = j.day
+
+    if i == 5 or i == 6:
+        i = 0
+
     for x in range(bus_days):
 
         # Working our hours per day taking into account bank hols and working days per month
@@ -230,11 +267,23 @@ def hourCalcRand():
         elif i == 5 or i == 6:
             i = 0
             j = j + 2
-        i = i + 1
-        j = j + 1  # increasing days by 1 after hours calculation
 
-        if randHoursSelected.get() == 1:
-            #Random Hours Calculations
+        # Re-check if bank hol is at start of week
+        if j in bankHols:  # skips the bank holiday if the days match the j value
+            i = i + 1
+        else:
+            actual_days.append(j)
+
+
+
+        # Setting dates to Zero if in leave
+        if j in dates.datesAnnual:
+            hours1.append(0)
+            hours2.append(0)
+            hours3.append(0)
+
+        # Random Hours Calculations
+        elif randHoursSelected.get() == 1:
             rand1 = 0
             if h1 > 0:
                 rand1 = random.randint(1, 5)
@@ -265,7 +314,8 @@ def hourCalcRand():
 
             hours3.append(maxH - rand1 - rand2)
             h3 = h3 - (maxH - rand1 - rand2)
-        #If not selecting random values
+
+        # If not selecting random values
         else:
             hCalc1 = round((maxH * (pOne / 100)), 2)
             hCalc2 = round((maxH * (pTwo / 100)), 2)
@@ -286,6 +336,11 @@ def hourCalcRand():
             else:
                 hours3.append(0)
 
+        # Moving to next day
+        i = i + 1
+        j = j + 1  # increasing days by 1 after hours calculation
+        
+    actual_days.append(j)
     # for x in range(len(hours1)):
     #     print("Hours 1: " + str(hours1[x]))
     #
@@ -329,7 +384,31 @@ def fillSheet():
             pyautogui.press("tab")
 
         # Adding department code at the last box
+        pyautogui.hotkey('ctrl', 'a')  # copy all in last section
         pyautogui.typewrite(depCode, interval=intervalWait)
+
+        if leaveTaken:
+            # Other section
+            for i in range(bus_days):
+                pyautogui.press("tab")
+
+            for i in range(finalTabs):
+                pyautogui.press("tab")
+
+            # Sickness section
+            for i in range(bus_days):
+                pyautogui.press("tab")
+
+            # Annual section
+            for i in range(len(actual_days)):
+                if actual_days[i] in dates.datesAnnual:
+                    datey = dateToDateTime(actual_days[i])
+                    hour = "7.5"
+                    if datey.weekday() == 4:
+                        hour = "6.5"
+                    pyautogui.typewrite(hour, interval=intervalWait)
+                pyautogui.press("tab")
+
         return True
 
     except pyautogui.FailSafeException:  # as e syntax added in ~python2.5
@@ -337,8 +416,14 @@ def fillSheet():
         #v.set("FailSafe Called")
         return False
 
+
 def leaveDates():
+    global dates
     dates = outlook.scrapeOutlook(outlookStart, outlookEnd)
+    if len(dates.datesAll) > 0:
+        return True
+    return False
+
 
 def deleteSheet():
     workDays()
@@ -367,6 +452,9 @@ def deleteSheet():
         pyautogui.typewrite(['backspace'], interval=intervalWait)
         pyautogui.press("tab")
 
+    # Department code wipe
+    pyautogui.hotkey('ctrl', 'a')  # copy all in last section
+    pyautogui.typewrite(['backspace'], interval=intervalWait)
 
 def checkDate():
     if datetime.date.today() > datetime.date(2022, 7, 1):
@@ -375,9 +463,6 @@ def checkDate():
             message=f'Current version of Time Sheet Filler is no longer supported, please contact your local Hamid for an upgrade. Thank you for using our service :)'
         )
         exit()
-
-# def fillLine():
-#     # d
 
 
 month_cb.bind('<<ComboboxSelected>>')
