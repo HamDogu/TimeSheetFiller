@@ -339,7 +339,7 @@ def hourCalcRand():
         # Moving to next day
         i = i + 1
         j = j + 1  # increasing days by 1 after hours calculation
-        
+
     actual_days.append(j)
     # for x in range(len(hours1)):
     #     print("Hours 1: " + str(hours1[x]))

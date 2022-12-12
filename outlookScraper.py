@@ -29,7 +29,7 @@ def get_appointments(dates, calendar, begin, subject_kw = None,exclude_subject_k
     cal_subject = [app.subject for app in appointments]
     cal_start = [app.start for app in appointments]
     cal_end = [app.end for app in appointments]
-    cal_body = [app.body for app in appointments]
+    # cal_body = [app.body for app in appointments]
 
     #### BUSY STUFF ####
     listBusy = []

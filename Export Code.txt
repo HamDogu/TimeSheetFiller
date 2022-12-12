@@ -1,0 +1,1 @@
+pyinstaller --hiddenimport win32timezone --onefile --icon=eggplant.ico -F main.py
