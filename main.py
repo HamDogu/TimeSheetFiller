@@ -296,7 +296,7 @@ def hourCalcRand():
 
 
         # Setting dates to Zero if in leave
-        if j in dates.datesAnnual:
+        if (j in dates.datesAnnual) or (j in dates.datesSick):
             hours1.append(0)
             hours2.append(0)
             hours3.append(0)
@@ -395,6 +395,7 @@ def fillSheet():
 
         # Hours 2
         if pTwo > 0:
+            print("Filling Hours 2")
             for i in range(bus_days):
                 pyautogui.typewrite(str(hours2[i]), interval=intervalWait)
                 pyautogui.press("tab")
@@ -407,10 +408,13 @@ def fillSheet():
 
         # Hours 3
         if pThree > 0:
+            print("Filling Hours 3")
             for i in range(bus_days):
                 pyautogui.typewrite(str(hours3[i]), interval=intervalWait)
                 pyautogui.press("tab")
 
+        grad = False
+        if grad: # Old grad code
             # Adding department code at the last box
             pyautogui.hotkey('ctrl', 'a')  # copy all in last section
             pyautogui.typewrite(depCode, interval=intervalWait)
@@ -419,26 +423,42 @@ def fillSheet():
             # Other section
             for i in range(bus_days):
                 pyautogui.press("tab")
-
-            for i in range(finalTabs):
+            # Non-productive time section
+            for i in range(bus_days):
                 pyautogui.press("tab")
+            #
+            # for i in range(finalTabs):
+            #     pyautogui.press("tab")
 
             # Extra tab
             pyautogui.press("tab")
 
             # Sickness section
-            for i in range(bus_days):
+            if len(dates.datesSick) > 0:
+                for i in range(len(actual_days)):
+                    if actual_days[i] in dates.datesSick:
+                        datey = dateToDateTime(actual_days[i])
+                        hour = "7.5"
+                        if datey.weekday() == 4:
+                            hour = "6.5"
+                        pyautogui.typewrite(hour, interval=intervalWait)
+                    pyautogui.press("tab")
+            else:
+                for i in range(bus_days):
+                    pyautogui.press("tab")
+                # Extra tab
                 pyautogui.press("tab")
 
             # Annual section
-            for i in range(len(actual_days)):
-                if actual_days[i] in dates.datesAnnual:
-                    datey = dateToDateTime(actual_days[i])
-                    hour = "7.5"
-                    if datey.weekday() == 4:
-                        hour = "6.5"
-                    pyautogui.typewrite(hour, interval=intervalWait)
-                pyautogui.press("tab")
+            if len(dates.datesAnnual) > 0:
+                for i in range(len(actual_days)):
+                    if actual_days[i] in dates.datesAnnual:
+                        datey = dateToDateTime(actual_days[i])
+                        hour = "7.5"
+                        if datey.weekday() == 4:
+                            hour = "6.5"
+                        pyautogui.typewrite(hour, interval=intervalWait)
+                    pyautogui.press("tab")
 
         return True
 
