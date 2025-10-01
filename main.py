@@ -19,7 +19,7 @@ intervalWait = 0
 
 pyautogui.FAILSAFE = True
 
-versionNum = 2.0
+versionNum = 2.3
 
 root = tk.Tk()
 root.resizable(False, False)
@@ -94,6 +94,23 @@ def month_changed(event):
     )
 
 
+def debugSheet():
+    # checkDate()
+    global leaveTaken
+    v = tk.StringVar()
+    v.set("Debugging")
+    label1 = tk.Label(root, textvariable=v, fg='orange', font=('helvetica', 15, 'bold'))
+    canvas1.create_window(100, 20, window=label1)
+    # root.iconify()
+
+    # Running functions
+    workDays()
+    leaveTaken = leaveDates()
+    percentCheck()
+    hourCalcRand()
+    v.set("Debug Complete!")
+    label1.config(fg='black')
+
 def startFill():
     # checkDate()
     global leaveTaken
@@ -141,7 +158,7 @@ def workDays():  # event):
         next_mon = '0' + next_mon
     if current_mon < 10:
         mon = '0' + mon
-    elif current_mon == 1:
+    if current_mon == 1:
         prev_mon = 12
 
     # Bank Holidays
@@ -173,6 +190,7 @@ def workDays():  # event):
     outlookStart = datetime.date(current_year, int(prev_mon), final_day_prev)
     global outlookEnd
     outlookEnd = datetime.date(current_year, int(current_mon), final_day_current)
+    print(f'Outlook Start: {str(outlookStart)}, Outlook End: {str(outlookEnd)}')
 
     global first_day
     first_day = (start_day.weekday())#"%A"))
@@ -252,11 +270,12 @@ def hourCalcRand():
     j = date_first_weekday.astype(datetime.datetime)
     j = j.day
 
+    # if sat or sun, skip to monday
     if i == 5 or i == 6:
         i = 0
 
     for x in range(bus_days):
-
+        print(f"j: {j} - bankhols: {bankHols}.")
         # Working our hours per day taking into account bank hols and working days per month
         if j in bankHols:  # skips the bank holiday if the days match the j value
             i = i+1
@@ -360,17 +379,25 @@ def fillSheet():
     depCode = "Department code: 09eswm00"
     # Hours
     try:
-        for i in range(bus_days):
-            pyautogui.typewrite(str(hours1[i]), interval=intervalWait)
-            pyautogui.press("tab")
+        # Check if % greater than 0
+        if pOne > 0:
+            # Hours 1
+            for i in range(bus_days):
+                pyautogui.typewrite(str(hours1[i]), interval=intervalWait)
+                pyautogui.press("tab")
 
-        for i in range(2):
-            pyautogui.press("tab")
+            for i in range(2):
+                pyautogui.press("tab")
+
+        # TODO: Add check for how many hours are being entered
+        # Then either add more of these for loops or move straight to next section
+        # TODO: Dont need to print 0 if no hours are being entered
 
         # Hours 2
-        for i in range(bus_days):
-            pyautogui.typewrite(str(hours2[i]), interval=intervalWait)
-            pyautogui.press("tab")
+        if pTwo > 0:
+            for i in range(bus_days):
+                pyautogui.typewrite(str(hours2[i]), interval=intervalWait)
+                pyautogui.press("tab")
 
         finalTabs = 3
         if checkFirefox.get() == 1:
@@ -379,13 +406,14 @@ def fillSheet():
             pyautogui.press("tab")
 
         # Hours 3
-        for i in range(bus_days):
-            pyautogui.typewrite(str(hours3[i]), interval=intervalWait)
-            pyautogui.press("tab")
+        if pThree > 0:
+            for i in range(bus_days):
+                pyautogui.typewrite(str(hours3[i]), interval=intervalWait)
+                pyautogui.press("tab")
 
-        # Adding department code at the last box
-        pyautogui.hotkey('ctrl', 'a')  # copy all in last section
-        pyautogui.typewrite(depCode, interval=intervalWait)
+            # Adding department code at the last box
+            pyautogui.hotkey('ctrl', 'a')  # copy all in last section
+            pyautogui.typewrite(depCode, interval=intervalWait)
 
         if leaveTaken:
             # Other section
@@ -394,6 +422,9 @@ def fillSheet():
 
             for i in range(finalTabs):
                 pyautogui.press("tab")
+
+            # Extra tab
+            pyautogui.press("tab")
 
             # Sickness section
             for i in range(bus_days):
@@ -442,7 +473,7 @@ def deleteSheet():
 
     finalTabs = 3
     if checkFirefox.get() == 1:
-        finalTabs = 4
+        finalTabs = 5
     print("Final tabs:" + str(finalTabs))
 
     for i in range(finalTabs):
@@ -478,7 +509,7 @@ tk.Checkbutton(root, variable=checkFirefox, onvalue=1, offvalue=0).grid(row=8, c
 ttk.Label(text="Rand Hrs:", width=11, justify= "left").grid(row=9, column=0)
 tk.Checkbutton(root, variable=randHoursSelected, onvalue=1, offvalue=0).grid(row=9, column=1, sticky=W)
 
-canvas1 = tk.Canvas(root, width=200, height=110)
+canvas1 = tk.Canvas(root, width=200, height=140)
 # canvas1.bind("<KeyPress>", keydown)
 canvas1.grid(row=10, column=0, columnspan=2)
 # canvas1.pack()
@@ -489,6 +520,9 @@ canvas1.create_window(100, 60, window=button1)
 
 button1 = tk.Button(text='Clear Sheet', command=deleteSheet, bg='red', fg='white')
 canvas1.create_window(100, 90, window=button1)
+
+button1 = tk.Button(text='Debug', command=debugSheet, bg='orange', fg='white')
+canvas1.create_window(100, 120, window=button1)
 
 
 root.mainloop()

@@ -48,6 +48,7 @@ def get_appointments(dates, calendar, begin, subject_kw = None,exclude_subject_k
             endStr = str(cal_end[x])[0:10]
             startDate = dt.datetime.strptime(startStr, "%Y-%m-%d").date()
             endDate = dt.datetime.strptime(endStr, "%Y-%m-%d").date()
+            # add one day at the end of end date
             days = (endDate - startDate).days
 
             if endDate == begin: continue
@@ -91,6 +92,9 @@ def get_appointments(dates, calendar, begin, subject_kw = None,exclude_subject_k
 
 def scrapeOutlook(begin, end):
     dates = Dates()
+    # add 1 to end date to include last day
+    end = end + dt.timedelta(days=1)
+    print(f"Scraping Outlook from {begin} to {end}")
     cal = get_calendar(begin, end)
     dates = get_appointments(dates, cal, begin)  # , subject_kw = 'weekly', exclude_subject_kw = 'Webcast'
     return dates
